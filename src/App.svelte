@@ -17,6 +17,7 @@
   let dateFormat: DateFormat = 'MM/DD/YYYY'
   let titleTemplate = '@code · @type'
   let descriptionTemplate = '@name — @section with @prof'
+  let recurringEvents = true
   let meetings: CourseMeeting[] = []
   let skipped = 0
   let error = ''
@@ -54,7 +55,7 @@
   }
 
   function exportCalendar(): void {
-    downloadCalendar(createCalendar(meetings, titleTemplate, descriptionTemplate))
+    downloadCalendar(createCalendar(meetings, titleTemplate, descriptionTemplate, recurringEvents))
   }
 
   function formatTime(value: string): string {
@@ -65,7 +66,13 @@
 
   function dateRange(meeting: CourseMeeting): string {
     const format = new Intl.DateTimeFormat('en-CA', { month: 'short', day: 'numeric' })
-    return `${format.format(meeting.startDate)} – ${format.format(meeting.endDate)}`
+    if (meeting.startDate.getTime() === meeting.endDate.getTime()) {
+      return format.format(meeting.startDate)
+    }
+    const range = `${format.format(meeting.startDate)} – ${format.format(meeting.endDate)}`
+    return meeting.oneOffDates.length > 1
+      ? `${meeting.oneOffDates.length} dates, ${range}`
+      : range
   }
 </script>
 
@@ -126,6 +133,14 @@
           {hasParsed && meetings.length ? 'Update class list' : 'Read schedule'}
         </button>
       </div>
+
+      <label class="recurring-toggle">
+        <input type="checkbox" bind:checked={recurringEvents} />
+        <span>
+          Create recurring events
+          <small>Turn off to add every class session as its own separate event.</small>
+        </span>
+      </label>
 
       {#if error}
         <div class="error-message" role="alert">

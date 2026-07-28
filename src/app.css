@@ -433,6 +433,28 @@ select,
   color: var(--muted);
 }
 
+.recurring-toggle {
+  margin-top: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.recurring-toggle input {
+  margin: 3px 0 0;
+  accent-color: var(--accent);
+}
+
+.recurring-toggle small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .download-button {
   width: 100%;
   margin-top: 20px;

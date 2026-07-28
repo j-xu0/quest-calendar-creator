@@ -13,6 +13,8 @@ export type CourseMeeting = {
   instructor: string;
   startDate: Date;
   endDate: Date;
+  /** Specific session dates for meetings that don't repeat weekly; empty for weekly meetings. */
+  oneOffDates: Date[];
 };
 
 export type ParseResult = {
@@ -84,11 +86,54 @@ export function parseQuestSchedule(text: string, dateFormat: DateFormat): ParseR
         instructor,
         startDate: parseDate(start, dateFormat),
         endDate: parseDate(end, dateFormat),
+        oneOffDates: [],
       });
     }
   });
 
-  return { meetings, skipped };
+  return { meetings: groupOneOffs(meetings), skipped };
+}
+
+// Quest lists irregular schedules (biweekly tutorials, lab sessions, seminar
+// dates) as one row per date. Collapse rows that differ only by date into a
+// single meeting so they export as one recurring event instead of many.
+function groupOneOffs(meetings: CourseMeeting[]): CourseMeeting[] {
+  const result: CourseMeeting[] = [];
+  const groups = new Map<string, CourseMeeting>();
+
+  for (const meeting of meetings) {
+    if (meeting.startDate.getTime() !== meeting.endDate.getTime()) {
+      result.push(meeting);
+      continue;
+    }
+
+    const key = [
+      meeting.code,
+      meeting.section,
+      meeting.type,
+      meeting.days.join(","),
+      meeting.startTime,
+      meeting.endTime,
+      meeting.location,
+      meeting.instructor,
+    ].join("|");
+    const existing = groups.get(key);
+    if (existing) {
+      existing.oneOffDates.push(meeting.startDate);
+    } else {
+      const grouped = { ...meeting, oneOffDates: [meeting.startDate] };
+      groups.set(key, grouped);
+      result.push(grouped);
+    }
+  }
+
+  for (const grouped of groups.values()) {
+    grouped.oneOffDates.sort((a, b) => a.getTime() - b.getTime());
+    grouped.startDate = grouped.oneOffDates[0];
+    grouped.endDate = grouped.oneOffDates[grouped.oneOffDates.length - 1];
+  }
+
+  return result;
 }
 
 function splitDetails(value: string): { location: string; instructor: string } {
@@ -159,6 +204,7 @@ export function createCalendar(
   meetings: CourseMeeting[],
   titleTemplate: string,
   descriptionTemplate: string,
+  recurring = true,
 ): string {
   const lines = [
     "BEGIN:VCALENDAR",
@@ -171,27 +217,80 @@ export function createCalendar(
   ];
 
   for (const meeting of meetings) {
-    const firstDate = firstMeetingDate(meeting.startDate, meeting.days);
-    const start = withTime(firstDate, meeting.startTime);
-    const end = withTime(firstDate, meeting.endTime);
-    const uid = `${meeting.id}-${formatDate(firstDate)}@quest-calendar.local`;
-
-    lines.push(
-      "BEGIN:VEVENT",
-      `UID:${escapeIcs(uid)}`,
-      `DTSTAMP:${formatUtc(new Date())}`,
-      `DTSTART;TZID=America/Toronto:${formatLocal(start)}`,
-      `DTEND;TZID=America/Toronto:${formatLocal(end)}`,
-      `RRULE:FREQ=WEEKLY;BYDAY=${meeting.days.join(",")};UNTIL=${formatUntil(meeting.endDate)}`,
-      `SUMMARY:${escapeIcs(fillTemplate(titleTemplate, meeting))}`,
-      `DESCRIPTION:${escapeIcs(fillTemplate(descriptionTemplate, meeting))}`,
-      `LOCATION:${escapeIcs(meeting.location)}`,
-      "END:VEVENT",
-    );
+    if (recurring) {
+      lines.push(...recurringEvent(meeting, titleTemplate, descriptionTemplate));
+    } else {
+      for (const date of meetingDates(meeting)) {
+        lines.push(...eventLines(meeting, date, [], titleTemplate, descriptionTemplate));
+      }
+    }
   }
 
   lines.push("END:VCALENDAR");
   return `${lines.map(foldLine).join("\r\n")}\r\n`;
+}
+
+function recurringEvent(
+  meeting: CourseMeeting,
+  titleTemplate: string,
+  descriptionTemplate: string,
+): string[] {
+  const hasDateList = meeting.oneOffDates.length > 0;
+  const firstDate = hasDateList
+    ? meeting.oneOffDates[0]
+    : firstMeetingDate(meeting.startDate, meeting.days);
+
+  const schedule: string[] = [];
+  if (hasDateList) {
+    const laterDates = meeting.oneOffDates.slice(1);
+    if (laterDates.length) {
+      schedule.push(
+        `RDATE;TZID=America/Toronto:${laterDates
+          .map((date) => formatLocal(withTime(date, meeting.startTime)))
+          .join(",")}`,
+      );
+    }
+  } else {
+    schedule.push(
+      `RRULE:FREQ=WEEKLY;BYDAY=${meeting.days.join(",")};UNTIL=${formatUntil(meeting.endDate)}`,
+    );
+  }
+
+  return eventLines(meeting, firstDate, schedule, titleTemplate, descriptionTemplate);
+}
+
+function eventLines(
+  meeting: CourseMeeting,
+  date: Date,
+  schedule: string[],
+  titleTemplate: string,
+  descriptionTemplate: string,
+): string[] {
+  return [
+    "BEGIN:VEVENT",
+    `UID:${escapeIcs(`${meeting.id}-${formatDate(date)}@quest-calendar.local`)}`,
+    `DTSTAMP:${formatUtc(new Date())}`,
+    `DTSTART;TZID=America/Toronto:${formatLocal(withTime(date, meeting.startTime))}`,
+    `DTEND;TZID=America/Toronto:${formatLocal(withTime(date, meeting.endTime))}`,
+    ...schedule,
+    `SUMMARY:${escapeIcs(fillTemplate(titleTemplate, meeting))}`,
+    `DESCRIPTION:${escapeIcs(fillTemplate(descriptionTemplate, meeting))}`,
+    `LOCATION:${escapeIcs(meeting.location)}`,
+    "END:VEVENT",
+  ];
+}
+
+function meetingDates(meeting: CourseMeeting): Date[] {
+  if (meeting.oneOffDates.length) return meeting.oneOffDates;
+
+  const wanted = meeting.days.map((day) => ["SU", "MO", "TU", "WE", "TH", "FR", "SA"].indexOf(day));
+  const dates: Date[] = [];
+  const cursor = new Date(meeting.startDate);
+  while (cursor.getTime() <= meeting.endDate.getTime()) {
+    if (wanted.includes(cursor.getDay())) dates.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
 }
 
 function firstMeetingDate(start: Date, days: string[]): Date {

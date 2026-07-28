@@ -86,6 +86,46 @@ To be Announced
     expect(new Set(result.meetings.map((meeting) => meeting.id)).size).toBe(3);
   });
 
+  it("groups one-off session dates into a single meeting", () => {
+    const input = `ECE 202 - Information Session
+Class Nbr\tSection\tComponent\tDays & Times\tRoom\tInstructor\tStart/End Date
+5263
+002
+SEM
+T 5:30PM - 6:20PM
+E7 4043
+Mahesh Tripunitara
+09/22/2026 - 09/22/2026
+
+
+
+T 5:30PM - 6:20PM
+E7 4043
+Mahesh Tripunitara
+10/06/2026 - 10/06/2026
+
+
+
+T 5:30PM - 6:20PM
+E7 4043
+Mahesh Tripunitara
+10/27/2026 - 10/27/2026`;
+    const result = parseQuestSchedule(input, "MM/DD/YYYY");
+
+    expect(result.meetings).toHaveLength(1);
+    expect(result.meetings[0].oneOffDates).toHaveLength(3);
+    expect(result.meetings[0].startDate.getDate()).toBe(22);
+    expect(result.meetings[0].endDate.getMonth()).toBe(9);
+
+    const content = createCalendar(result.meetings, "@code", "@name");
+    expect(content.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+    expect(content).toContain("DTSTART;TZID=America/Toronto:20260922T173000");
+    expect(content).toContain(
+      "RDATE;TZID=America/Toronto:20261006T173000,20261027T173000",
+    );
+    expect(content).not.toContain("RRULE");
+  });
+
   it("supports 24-hour times and skips TBA meetings", () => {
     const input = `CS 100 - Sample Course
 1234 001 LEC MW 14:30 - 15:20 MC 100 Jane Doe 2026/09/08 - 2026/12/04
@@ -99,6 +139,23 @@ To be Announced
 });
 
 describe("calendar generation", () => {
+  it("expands every session into its own event when recurring is off", () => {
+    const input = `CS 100 - Sample Course
+1234 001 LEC MW 14:30 - 15:20 MC 100 Jane Doe 09/07/2026 - 09/20/2026`;
+    const { meetings } = parseQuestSchedule(input, "MM/DD/YYYY");
+    const content = createCalendar(meetings, "@code", "@name", false);
+
+    // Two weeks of Mon + Wed classes starting Mon Sep 7 2026.
+    expect(content.match(/BEGIN:VEVENT/g)).toHaveLength(4);
+    expect(content).toContain("DTSTART;TZID=America/Toronto:20260907T143000");
+    expect(content).toContain("DTSTART;TZID=America/Toronto:20260916T143000");
+    expect(content).not.toContain("RRULE");
+    expect(content).not.toContain("RDATE");
+    // UIDs stay unique across the expanded events.
+    const uids = content.match(/UID:[^\r\n]+/g) ?? [];
+    expect(new Set(uids).size).toBe(4);
+  });
+
   it("fills labels and emits recurring Toronto calendar events", () => {
     const [meeting] = parseQuestSchedule(SAMPLE_QUEST_DATA, "MM/DD/YYYY").meetings;
     const content = createCalendar([meeting], "@code · @type", "@name with @prof");
