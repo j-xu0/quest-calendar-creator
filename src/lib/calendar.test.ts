@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createCalendar, fillTemplate, parseQuestSchedule } from "./calendar";
+import { createCalendar, createCalendarFiles, fillTemplate, parseQuestSchedule } from "./calendar";
 import { SAMPLE_QUEST_DATA } from "./sample";
 
 describe("parseQuestSchedule", () => {
@@ -135,6 +135,36 @@ Mahesh Tripunitara
     expect(result.meetings).toHaveLength(1);
     expect(result.meetings[0].startTime).toBe("14:30");
     expect(result.skipped).toBe(1);
+  });
+});
+
+describe("createCalendarFiles", () => {
+  it("produces one combined file by default", () => {
+    const { meetings } = parseQuestSchedule(SAMPLE_QUEST_DATA, "MM/DD/YYYY");
+    const files = createCalendarFiles(meetings, "@code", "@name", {
+      recurring: true,
+      separateFiles: false,
+    });
+
+    expect(files).toHaveLength(1);
+    expect(files[0].filename).toBe("quest-schedule.ics");
+    expect(files[0].content).toContain("X-WR-CALNAME:Quest Schedule");
+    expect(files[0].content.match(/BEGIN:VEVENT/g)).toHaveLength(4);
+  });
+
+  it("splits meetings into one file per course", () => {
+    const { meetings } = parseQuestSchedule(SAMPLE_QUEST_DATA, "MM/DD/YYYY");
+    const files = createCalendarFiles(meetings, "@code", "@name", {
+      recurring: true,
+      separateFiles: true,
+    });
+
+    expect(files.map((file) => file.filename)).toEqual(["cs-246.ics", "math-239.ics"]);
+    expect(files[0].content).toContain("X-WR-CALNAME:CS 246");
+    expect(files[0].content.match(/BEGIN:VEVENT/g)).toHaveLength(2);
+    expect(files[0].content).not.toContain("MATH 239");
+    expect(files[1].content).toContain("X-WR-CALNAME:MATH 239");
+    expect(files[1].content.match(/BEGIN:VEVENT/g)).toHaveLength(2);
   });
 });
 

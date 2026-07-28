@@ -1,6 +1,6 @@
 <script lang="ts">
   import {
-    createCalendar,
+    createCalendarFiles,
     downloadCalendar,
     fillTemplate,
     parseQuestSchedule,
@@ -18,6 +18,7 @@
   let titleTemplate = '@code · @type'
   let descriptionTemplate = '@name — @section with @prof'
   let recurringEvents = true
+  let separateFiles = false
   let meetings: CourseMeeting[] = []
   let skipped = 0
   let error = ''
@@ -55,7 +56,14 @@
   }
 
   function exportCalendar(): void {
-    downloadCalendar(createCalendar(meetings, titleTemplate, descriptionTemplate, recurringEvents))
+    const files = createCalendarFiles(meetings, titleTemplate, descriptionTemplate, {
+      recurring: recurringEvents,
+      separateFiles,
+    })
+    // Stagger multiple downloads so the browser does not drop any of them.
+    files.forEach((file, index) => {
+      window.setTimeout(() => downloadCalendar(file.content, file.filename), index * 250)
+    })
   }
 
   function formatTime(value: string): string {
@@ -134,11 +142,19 @@
         </button>
       </div>
 
-      <label class="recurring-toggle">
+      <label class="export-toggle">
         <input type="checkbox" bind:checked={recurringEvents} />
         <span>
           Create recurring events
           <small>Turn off to add every class session as its own separate event.</small>
+        </span>
+      </label>
+
+      <label class="export-toggle">
+        <input type="checkbox" bind:checked={separateFiles} />
+        <span>
+          One calendar file per course
+          <small>Downloads a separate .ics file for each course instead of one combined file.</small>
         </span>
       </label>
 
@@ -201,10 +217,17 @@
             </div>
           </details>
 
+          {@const courseCount = new Set(meetings.map((meeting) => meeting.code)).size}
           <button class="download-button" onclick={exportCalendar}>
-            Download calendar file (.ics)
+            {separateFiles && courseCount > 1
+              ? `Download ${courseCount} calendar files (.ics)`
+              : 'Download calendar file (.ics)'}
           </button>
-          <p class="download-hint">Works with Google Calendar, Outlook, and Apple Calendar.</p>
+          <p class="download-hint">
+            {separateFiles && courseCount > 1
+              ? 'One file per course. Works with Google Calendar, Outlook, and Apple Calendar.'
+              : 'Works with Google Calendar, Outlook, and Apple Calendar.'}
+          </p>
         {:else}
           <div class="empty-state">
             <h3>No classes loaded</h3>

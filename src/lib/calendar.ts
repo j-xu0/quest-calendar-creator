@@ -200,11 +200,44 @@ export function fillTemplate(template: string, meeting: CourseMeeting): string {
   );
 }
 
+export type CalendarFile = { filename: string; content: string };
+
+export type ExportOptions = { recurring: boolean; separateFiles: boolean };
+
+export function createCalendarFiles(
+  meetings: CourseMeeting[],
+  titleTemplate: string,
+  descriptionTemplate: string,
+  options: ExportOptions,
+): CalendarFile[] {
+  if (!options.separateFiles) {
+    return [
+      {
+        filename: "quest-schedule.ics",
+        content: createCalendar(meetings, titleTemplate, descriptionTemplate, options.recurring),
+      },
+    ];
+  }
+
+  const byCourse = new Map<string, CourseMeeting[]>();
+  for (const meeting of meetings) {
+    const group = byCourse.get(meeting.code) ?? [];
+    group.push(meeting);
+    byCourse.set(meeting.code, group);
+  }
+
+  return [...byCourse].map(([code, group]) => ({
+    filename: `${code.toLowerCase().replace(/\s+/g, "-")}.ics`,
+    content: createCalendar(group, titleTemplate, descriptionTemplate, options.recurring, code),
+  }));
+}
+
 export function createCalendar(
   meetings: CourseMeeting[],
   titleTemplate: string,
   descriptionTemplate: string,
   recurring = true,
+  calendarName = "Quest Schedule",
 ): string {
   const lines = [
     "BEGIN:VCALENDAR",
@@ -212,7 +245,7 @@ export function createCalendar(
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "PRODID:-//Quest Calendar Creator//EN",
-    "X-WR-CALNAME:Quest Schedule",
+    `X-WR-CALNAME:${escapeIcs(calendarName)}`,
     "X-WR-TIMEZONE:America/Toronto",
   ];
 
@@ -351,12 +384,12 @@ function foldLine(line: string): string {
   return chunks.join("\r\n");
 }
 
-export function downloadCalendar(content: string): void {
+export function downloadCalendar(content: string, filename = "quest-schedule.ics"): void {
   const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = "quest-schedule.ics";
+  anchor.download = filename;
   anchor.style.display = "none";
   document.body.appendChild(anchor);
   anchor.click();
