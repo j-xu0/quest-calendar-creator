@@ -22,21 +22,23 @@
   let meetings: CourseMeeting[] = []
   let skipped = 0
   let error = ''
-  let hasParsed = false
 
   function parse(): void {
     error = ''
+    skipped = 0
+    if (!questData.trim()) {
+      meetings = []
+      return
+    }
     try {
       const result = parseQuestSchedule(questData, dateFormat)
       meetings = result.meetings
       skipped = result.skipped
-      hasParsed = true
       if (!meetings.length) {
         error = 'No scheduled classes found. Make sure you copied Quest’s entire List View.'
       }
     } catch (caught) {
       meetings = []
-      hasParsed = true
       error = caught instanceof Error ? caught.message : 'That schedule could not be read.'
     }
   }
@@ -52,7 +54,6 @@
     meetings = []
     skipped = 0
     error = ''
-    hasParsed = false
   }
 
   function exportCalendar(): void {
@@ -94,7 +95,7 @@
     <p>Copy your class schedule from Quest and download it as an iCalendar (.ics) file. Your schedule is processed in this browser and is not uploaded anywhere.</p>
   </section>
 
-  <section id="schedule" class="workspace" class:has-preview={hasParsed} aria-label="Calendar creator">
+  <section id="schedule" class="workspace" aria-label="Calendar creator">
     <section class="input-panel">
       <h2>Paste from Quest</h2>
 
@@ -110,7 +111,7 @@
       <textarea
         id="quest-data"
         bind:value={questData}
-        oninput={() => { hasParsed = false; error = '' }}
+        oninput={parse}
         placeholder="Paste your copied Quest schedule here."
         spellcheck="false"
       ></textarea>
@@ -126,20 +127,14 @@
         </span>
       </div>
 
-      <div class="date-row">
-        <div class="date-field">
-          <label class="field-label" for="date-format">Date format used by Quest:</label>
-          <select id="date-format" bind:value={dateFormat} onchange={() => { hasParsed = false }}>
-            <option value="MM/DD/YYYY">MM / DD / YYYY</option>
-            <option value="DD/MM/YYYY">DD / MM / YYYY</option>
-            <option value="YYYY/MM/DD">YYYY / MM / DD</option>
-          </select>
-          <p>Choose the order used for dates in your schedule.</p>
-        </div>
-
-        <button class="primary-button" onclick={parse} disabled={!questData.trim()}>
-          {hasParsed && meetings.length ? 'Update class list' : 'Read schedule'}
-        </button>
+      <div class="date-field">
+        <label class="field-label" for="date-format">Date format used by Quest:</label>
+        <select id="date-format" bind:value={dateFormat} onchange={parse}>
+          <option value="MM/DD/YYYY">MM / DD / YYYY</option>
+          <option value="DD/MM/YYYY">DD / MM / YYYY</option>
+          <option value="YYYY/MM/DD">YYYY / MM / DD</option>
+        </select>
+        <p>Choose the order used for dates in your schedule.</p>
       </div>
 
       <label class="export-toggle">
@@ -166,8 +161,7 @@
       {/if}
     </section>
 
-    {#if hasParsed}
-      <section id="calendar-preview" class="preview-panel" class:is-empty={!meetings.length}>
+    <section id="calendar-preview" class="preview-panel">
         <div class="preview-heading">
           <h2>Review & export</h2>
           {#if meetings.length}
@@ -230,12 +224,16 @@
           </p>
         {:else}
           <div class="empty-state">
-            <h3>No classes loaded</h3>
-            <p>Check the pasted schedule above and try again.</p>
+            {#if error}
+              <h3>No classes found</h3>
+              <p>Check the pasted schedule and the date format, then try again.</p>
+            {:else}
+              <h3>Nothing here yet</h3>
+              <p>Paste your Quest schedule on the left and your classes will show up here.</p>
+            {/if}
           </div>
         {/if}
       </section>
-    {/if}
   </section>
 
 </main>

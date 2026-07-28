@@ -86,16 +86,12 @@ main {
 
 .workspace {
   display: grid;
-  grid-template-columns: 1fr;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface);
   overflow: hidden;
-}
-
-.workspace.has-preview {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .input-panel,
@@ -232,13 +228,9 @@ button {
   background: #f2f3f2;
 }
 
-.date-row {
+.date-field {
   margin-top: 20px;
-  display: grid;
-  grid-template-columns: minmax(180px, 220px) auto;
-  gap: 16px;
-  align-items: start;
-  justify-content: start;
+  max-width: 220px;
 }
 
 select,
@@ -247,17 +239,12 @@ select,
   padding: 8px 12px;
 }
 
-.date-row p {
+.date-field p {
   margin: 6px 0 0;
   color: var(--faint);
   font-size: 12px;
 }
 
-.date-row .primary-button {
-  margin-top: 27px;
-}
-
-.primary-button,
 .download-button {
   border: 0;
   border-radius: 8px;
@@ -266,21 +253,8 @@ select,
   font-weight: 600;
 }
 
-.primary-button {
-  min-height: 38px;
-  padding: 8px 16px;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.primary-button:hover:not(:disabled),
 .download-button:hover {
   background: var(--accent-dark);
-}
-
-.primary-button:disabled {
-  background: #a9b6af;
-  cursor: not-allowed;
 }
 
 .error-message {
@@ -311,10 +285,10 @@ select,
 }
 
 .preview-heading {
-  min-height: 30px;
+  min-height: 0;
   margin-bottom: 16px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
 }
@@ -496,7 +470,7 @@ select,
 }
 
 @media (max-width: 960px) {
-  .workspace.has-preview {
+  .workspace {
     grid-template-columns: 1fr;
   }
 
@@ -539,15 +513,6 @@ select,
 
   .template-fields p {
     grid-column: 1;
-  }
-
-  .date-row {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .date-row .primary-button {
-    margin-top: 0;
   }
 
   .empty-state {
