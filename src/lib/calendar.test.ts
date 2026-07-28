@@ -169,11 +169,23 @@ describe("createCalendarFiles", () => {
 });
 
 describe("calendar generation", () => {
+  it("writes out full component names when longTypeNames is on", () => {
+    const [meeting] = parseQuestSchedule(SAMPLE_QUEST_DATA, "MM/DD/YYYY").meetings;
+
+    expect(fillTemplate("@code · @type", meeting)).toBe("CS 246 · LEC");
+    expect(fillTemplate("@code · @type", meeting, true)).toBe("CS 246 · Lecture");
+
+    const content = createCalendar([meeting], "@code · @type", "@name", {
+      longTypeNames: true,
+    });
+    expect(content).toContain("SUMMARY:CS 246 · Lecture");
+  });
+
   it("expands every session into its own event when recurring is off", () => {
     const input = `CS 100 - Sample Course
 1234 001 LEC MW 14:30 - 15:20 MC 100 Jane Doe 09/07/2026 - 09/20/2026`;
     const { meetings } = parseQuestSchedule(input, "MM/DD/YYYY");
-    const content = createCalendar(meetings, "@code", "@name", false);
+    const content = createCalendar(meetings, "@code", "@name", { recurring: false });
 
     // Two weeks of Mon + Wed classes starting Mon Sep 7 2026.
     expect(content.match(/BEGIN:VEVENT/g)).toHaveLength(4);

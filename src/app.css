@@ -161,7 +161,7 @@ kbd {
 
 textarea,
 select,
-.template-fields input {
+.template-fields input:not([type="checkbox"]) {
   width: 100%;
   border: 1px solid #c9cdca;
   border-radius: 8px;
@@ -234,7 +234,7 @@ button {
 }
 
 select,
-.template-fields input {
+.template-fields input:not([type="checkbox"]) {
   min-height: 38px;
   padding: 8px 12px;
 }
@@ -405,6 +405,22 @@ select,
   grid-column: 2;
   margin: 0;
   color: var(--muted);
+}
+
+.template-toggle {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.template-toggle input {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  accent-color: var(--accent);
 }
 
 .export-toggle {

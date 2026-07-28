@@ -22,6 +22,32 @@ export type ParseResult = {
   skipped: number;
 };
 
+// Quest component codes and their full names, per UW's class schedule legend.
+const TYPE_NAMES: Record<string, string> = {
+  LEC: "Lecture",
+  TUT: "Tutorial",
+  LAB: "Lab",
+  SEM: "Seminar",
+  PRJ: "Project",
+  TST: "Test Slot",
+  PRA: "Practicum",
+  CLN: "Clinic",
+  DIS: "Discussion",
+  ENS: "Ensemble",
+  ESS: "Essay",
+  FLD: "Field Studies",
+  ORL: "Oral Conversation",
+  RDG: "Reading",
+  RSC: "Research",
+  STU: "Studio",
+  WRK: "Work Term",
+  WSP: "Workshop",
+};
+
+export function typeName(code: string): string {
+  return TYPE_NAMES[code.toUpperCase()] ?? code;
+}
+
 const DAY_CODES: Record<string, string> = {
   M: "MO",
   T: "TU",
@@ -185,12 +211,16 @@ function parseDate(value: string, format: DateFormat): Date {
   return date;
 }
 
-export function fillTemplate(template: string, meeting: CourseMeeting): string {
+export function fillTemplate(
+  template: string,
+  meeting: CourseMeeting,
+  longTypeNames = false,
+): string {
   const values: Record<string, string> = {
     "@code": meeting.code,
     "@name": meeting.name,
     "@section": meeting.section,
-    "@type": meeting.type,
+    "@type": longTypeNames ? typeName(meeting.type) : meeting.type,
     "@location": meeting.location,
     "@prof": meeting.instructor,
   };
@@ -202,7 +232,17 @@ export function fillTemplate(template: string, meeting: CourseMeeting): string {
 
 export type CalendarFile = { filename: string; content: string };
 
-export type ExportOptions = { recurring: boolean; separateFiles: boolean };
+export type CalendarOptions = {
+  recurring?: boolean;
+  calendarName?: string;
+  longTypeNames?: boolean;
+};
+
+export type ExportOptions = {
+  recurring: boolean;
+  separateFiles: boolean;
+  longTypeNames?: boolean;
+};
 
 export function createCalendarFiles(
   meetings: CourseMeeting[],
@@ -210,11 +250,13 @@ export function createCalendarFiles(
   descriptionTemplate: string,
   options: ExportOptions,
 ): CalendarFile[] {
+  const shared = { recurring: options.recurring, longTypeNames: options.longTypeNames };
+
   if (!options.separateFiles) {
     return [
       {
         filename: "quest-schedule.ics",
-        content: createCalendar(meetings, titleTemplate, descriptionTemplate, options.recurring),
+        content: createCalendar(meetings, titleTemplate, descriptionTemplate, shared),
       },
     ];
   }
@@ -228,7 +270,10 @@ export function createCalendarFiles(
 
   return [...byCourse].map(([code, group]) => ({
     filename: `${code.toLowerCase().replace(/\s+/g, "-")}.ics`,
-    content: createCalendar(group, titleTemplate, descriptionTemplate, options.recurring, code),
+    content: createCalendar(group, titleTemplate, descriptionTemplate, {
+      ...shared,
+      calendarName: code,
+    }),
   }));
 }
 
@@ -236,9 +281,9 @@ export function createCalendar(
   meetings: CourseMeeting[],
   titleTemplate: string,
   descriptionTemplate: string,
-  recurring = true,
-  calendarName = "Quest Schedule",
+  options: CalendarOptions = {},
 ): string {
+  const { recurring = true, calendarName = "Quest Schedule", longTypeNames = false } = options;
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -251,10 +296,12 @@ export function createCalendar(
 
   for (const meeting of meetings) {
     if (recurring) {
-      lines.push(...recurringEvent(meeting, titleTemplate, descriptionTemplate));
+      lines.push(...recurringEvent(meeting, titleTemplate, descriptionTemplate, longTypeNames));
     } else {
       for (const date of meetingDates(meeting)) {
-        lines.push(...eventLines(meeting, date, [], titleTemplate, descriptionTemplate));
+        lines.push(
+          ...eventLines(meeting, date, [], titleTemplate, descriptionTemplate, longTypeNames),
+        );
       }
     }
   }
@@ -267,6 +314,7 @@ function recurringEvent(
   meeting: CourseMeeting,
   titleTemplate: string,
   descriptionTemplate: string,
+  longTypeNames: boolean,
 ): string[] {
   const hasDateList = meeting.oneOffDates.length > 0;
   const firstDate = hasDateList
@@ -289,7 +337,7 @@ function recurringEvent(
     );
   }
 
-  return eventLines(meeting, firstDate, schedule, titleTemplate, descriptionTemplate);
+  return eventLines(meeting, firstDate, schedule, titleTemplate, descriptionTemplate, longTypeNames);
 }
 
 function eventLines(
@@ -298,6 +346,7 @@ function eventLines(
   schedule: string[],
   titleTemplate: string,
   descriptionTemplate: string,
+  longTypeNames: boolean,
 ): string[] {
   return [
     "BEGIN:VEVENT",
@@ -306,8 +355,8 @@ function eventLines(
     `DTSTART;TZID=America/Toronto:${formatLocal(withTime(date, meeting.startTime))}`,
     `DTEND;TZID=America/Toronto:${formatLocal(withTime(date, meeting.endTime))}`,
     ...schedule,
-    `SUMMARY:${escapeIcs(fillTemplate(titleTemplate, meeting))}`,
-    `DESCRIPTION:${escapeIcs(fillTemplate(descriptionTemplate, meeting))}`,
+    `SUMMARY:${escapeIcs(fillTemplate(titleTemplate, meeting, longTypeNames))}`,
+    `DESCRIPTION:${escapeIcs(fillTemplate(descriptionTemplate, meeting, longTypeNames))}`,
     `LOCATION:${escapeIcs(meeting.location)}`,
     "END:VEVENT",
   ];

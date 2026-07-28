@@ -19,6 +19,7 @@
   let descriptionTemplate = '@name — @section with @prof'
   let recurringEvents = true
   let separateFiles = false
+  let longTypeNames = false
   let meetings: CourseMeeting[] = []
   let skipped = 0
   let error = ''
@@ -60,6 +61,7 @@
     const files = createCalendarFiles(meetings, titleTemplate, descriptionTemplate, {
       recurring: recurringEvents,
       separateFiles,
+      longTypeNames,
     })
     // Stagger multiple downloads so the browser does not drop any of them.
     files.forEach((file, index) => {
@@ -180,7 +182,7 @@
               <article class="course-row">
                 <div class="course-title">
                   <div>
-                    <h3>{fillTemplate(titleTemplate, meeting)}</h3>
+                    <h3>{fillTemplate(titleTemplate, meeting, longTypeNames)}</h3>
                     <p>{meeting.name}</p>
                   </div>
                   <span class="type-label">{meeting.type}</span>
@@ -208,6 +210,10 @@
               <label for="description-template">Description</label>
               <input id="description-template" bind:value={descriptionTemplate} />
               <p>Use @code, @name, @section, @type, @location, or @prof.</p>
+              <label class="template-toggle">
+                <input type="checkbox" bind:checked={longTypeNames} />
+                Write out class types in full (Lecture instead of LEC)
+              </label>
             </div>
           </details>
 
