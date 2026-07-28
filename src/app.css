@@ -1,0 +1,530 @@
+:root {
+  --accent: #1f6e4d;
+  --accent-dark: #175539;
+  --ink: #1a1f1c;
+  --muted: #5f6763;
+  --faint: #8a918d;
+  --line: #dfe2e0;
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+select,
+summary {
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+main {
+  width: min(980px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 56px 0 48px;
+}
+
+.hero {
+  max-width: 640px;
+  margin-bottom: 36px;
+}
+
+.hero h1 {
+  margin: 0 0 12px;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.workspace.has-preview {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.input-panel,
+.preview-panel {
+  min-width: 0;
+  padding: 28px;
+}
+
+.preview-panel {
+  min-height: 100%;
+  border-left: 1px solid var(--line);
+  background: #fafaf9;
+}
+
+h2 {
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.instructions {
+  margin: 0 0 24px;
+  padding: 0 0 0 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.instructions li + li {
+  margin-top: 6px;
+}
+
+.instructions strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+kbd {
+  min-width: 24px;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+textarea,
+select,
+.template-fields input {
+  width: 100%;
+  border: 1px solid #c9cdca;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+textarea {
+  display: block;
+  min-height: 200px;
+  padding: 12px;
+  overflow: auto;
+  resize: vertical;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+textarea::placeholder {
+  color: var(--faint);
+}
+
+.textarea-meta {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.local-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.local-note svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+button {
+  border: 1px solid #c9cdca;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.sample-button,
+.text-button {
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sample-button:hover,
+.text-button:hover {
+  background: #f2f3f2;
+}
+
+.date-row {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) auto;
+  gap: 16px;
+  align-items: start;
+  justify-content: start;
+}
+
+select,
+.template-fields input {
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.date-row p {
+  margin: 6px 0 0;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.date-row .primary-button {
+  margin-top: 27px;
+}
+
+.primary-button,
+.download-button {
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+
+.primary-button {
+  min-height: 38px;
+  padding: 8px 16px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.primary-button:hover:not(:disabled),
+.download-button:hover {
+  background: var(--accent-dark);
+}
+
+.primary-button:disabled {
+  background: #a9b6af;
+  cursor: not-allowed;
+}
+
+.error-message {
+  margin-top: 20px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 10px;
+  border: 1px solid #e4b6b0;
+  border-radius: 8px;
+  background: #fdf3f2;
+  color: #8c322a;
+  font-size: 14px;
+}
+
+.error-message svg {
+  width: 18px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.error-message div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.preview-heading {
+  min-height: 30px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.preview-heading h2 {
+  margin: 0;
+}
+
+.class-count {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.calendar-label {
+  margin: 0 0 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.course-list {
+  max-height: 500px;
+  overflow: auto;
+}
+
+.course-row {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.course-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.course-title h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.course-title p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.type-label {
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: #eaf2ec;
+  color: var(--accent-dark);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.course-meta {
+  margin: 6px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.skipped-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.template-section {
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.template-section summary {
+  padding: 10px 14px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  list-style-position: inside;
+}
+
+.template-fields {
+  padding: 12px 14px 14px;
+  display: grid;
+  grid-template-columns: 95px 1fr;
+  gap: 10px 12px;
+  align-items: center;
+  border-top: 1px solid var(--line);
+}
+
+.template-fields label,
+.template-fields p {
+  font-size: 13px;
+}
+
+.template-fields p {
+  grid-column: 2;
+  margin: 0;
+  color: var(--muted);
+}
+
+.download-button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 11px 16px;
+  display: block;
+  font-size: 15px;
+}
+
+.download-hint {
+  margin: 8px 0 0;
+  color: var(--faint);
+  font-size: 12px;
+  text-align: center;
+}
+
+.empty-state {
+  min-height: 400px;
+  display: grid;
+  place-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.empty-state h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.empty-state p {
+  max-width: 340px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 960px) {
+  .workspace.has-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-panel {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .course-list {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 600px) {
+  main {
+    width: calc(100% - 32px);
+  }
+
+  main {
+    padding-top: 36px;
+  }
+
+  .hero {
+    margin-bottom: 28px;
+  }
+
+  .hero h1 {
+    font-size: 24px;
+  }
+
+  .input-panel,
+  .preview-panel {
+    padding: 20px 16px;
+  }
+
+  .template-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .template-fields p {
+    grid-column: 1;
+  }
+
+  .date-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .date-row .primary-button {
+    margin-top: 0;
+  }
+
+  .empty-state {
+    min-height: 300px;
+  }
+}
