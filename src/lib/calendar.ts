@@ -292,6 +292,24 @@ export function createCalendar(
     "PRODID:-//Quest Calendar Creator//EN",
     `X-WR-CALNAME:${escapeIcs(calendarName)}`,
     "X-WR-TIMEZONE:America/Toronto",
+    // RFC 5545 requires a VTIMEZONE definition for every TZID referenced.
+    "BEGIN:VTIMEZONE",
+    "TZID:America/Toronto",
+    "BEGIN:DAYLIGHT",
+    "TZOFFSETFROM:-0500",
+    "TZOFFSETTO:-0400",
+    "TZNAME:EDT",
+    "DTSTART:19700308T020000",
+    "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU",
+    "END:DAYLIGHT",
+    "BEGIN:STANDARD",
+    "TZOFFSETFROM:-0400",
+    "TZOFFSETTO:-0500",
+    "TZNAME:EST",
+    "DTSTART:19701101T020000",
+    "RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU",
+    "END:STANDARD",
+    "END:VTIMEZONE",
   ];
 
   for (const meeting of meetings) {
@@ -397,8 +415,40 @@ function formatLocal(date: Date): string {
   return `${formatDate(date)}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
 }
 
+// RFC 5545 requires UNTIL in UTC when DTSTART carries a TZID: convert
+// 23:59:59 in Toronto on the meeting's end date to the equivalent UTC instant.
 function formatUntil(date: Date): string {
-  return `${formatDate(date)}T235959`;
+  const wallAsUtc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
+  const offset = torontoWallTimeAsUtc(new Date(wallAsUtc)) - wallAsUtc;
+  const utc = new Date(wallAsUtc - offset);
+  return (
+    `${utc.getUTCFullYear()}${pad(utc.getUTCMonth() + 1)}${pad(utc.getUTCDate())}` +
+    `T${pad(utc.getUTCHours())}${pad(utc.getUTCMinutes())}${pad(utc.getUTCSeconds())}Z`
+  );
+}
+
+// The Toronto wall-clock reading of an instant, encoded as a UTC timestamp,
+// so subtracting the instant yields the zone's UTC offset at that moment.
+function torontoWallTimeAsUtc(instant: Date): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(instant);
+  const get = (type: string) => Number(parts.find((part) => part.type === type)?.value);
+  return Date.UTC(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    get("hour") % 24,
+    get("minute"),
+    get("second"),
+  );
 }
 
 function formatUtc(date: Date): string {

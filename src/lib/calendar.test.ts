@@ -123,7 +123,7 @@ Mahesh Tripunitara
     expect(content).toContain(
       "RDATE;TZID=America/Toronto:20261006T173000,20261027T173000",
     );
-    expect(content).not.toContain("RRULE");
+    expect(content).not.toContain("RRULE:FREQ=WEEKLY;BYDAY");
   });
 
   it("supports 24-hour times and skips TBA meetings", () => {
@@ -191,7 +191,7 @@ describe("calendar generation", () => {
     expect(content.match(/BEGIN:VEVENT/g)).toHaveLength(4);
     expect(content).toContain("DTSTART;TZID=America/Toronto:20260907T143000");
     expect(content).toContain("DTSTART;TZID=America/Toronto:20260916T143000");
-    expect(content).not.toContain("RRULE");
+    expect(content).not.toContain("RRULE:FREQ=WEEKLY;BYDAY");
     expect(content).not.toContain("RDATE");
     // UIDs stay unique across the expanded events.
     const uids = content.match(/UID:[^\r\n]+/g) ?? [];
@@ -204,8 +204,10 @@ describe("calendar generation", () => {
 
     expect(fillTemplate("@code in @location", meeting)).toBe("CS 246 in MC 2066");
     expect(content).toContain("BEGIN:VCALENDAR\r\n");
+    expect(content).toContain("BEGIN:VTIMEZONE\r\nTZID:America/Toronto");
     expect(content).toContain("DTSTART;TZID=America/Toronto:20260904T103000");
-    expect(content).toContain("RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20261204T235959");
+    // Dec 4 2026 23:59:59 in Toronto (EST, UTC-5) expressed in UTC per RFC 5545.
+    expect(content).toContain("RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20261205T045959Z");
     expect(content).toContain("SUMMARY:CS 246 · LEC");
     expect(content).toContain("END:VCALENDAR\r\n");
   });
