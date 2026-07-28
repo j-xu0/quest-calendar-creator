@@ -1,12 +1,21 @@
 :root {
   --accent: #1f6e4d;
-  --accent-dark: #175539;
+  --accent-hover: #175539;
   --ink: #1a1f1c;
   --muted: #5f6763;
   --faint: #8a918d;
   --line: #dfe2e0;
   --bg: #f7f7f5;
   --surface: #ffffff;
+  --surface-soft: #fafaf9;
+  --control-border: #c9cdca;
+  --hover-bg: #f2f3f2;
+  --accent-soft: #eaf2ec;
+  --accent-soft-text: #175539;
+  --error-border: #e4b6b0;
+  --error-bg: #fdf3f2;
+  --error-text: #8c322a;
+  color-scheme: light;
   font-family:
     system-ui,
     -apple-system,
@@ -16,6 +25,28 @@
   color: var(--ink);
   background: var(--bg);
   font-synthesis: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #2e8a63;
+    --accent-hover: #37996f;
+    --ink: #e4e8e5;
+    --muted: #a3aaa5;
+    --faint: #7a827c;
+    --line: #2b302c;
+    --bg: #121513;
+    --surface: #1a1e1b;
+    --surface-soft: #161a17;
+    --control-border: #3a403b;
+    --hover-bg: #242923;
+    --accent-soft: #1f3328;
+    --accent-soft-text: #85cba8;
+    --error-border: #6e3b34;
+    --error-bg: #2a1b19;
+    --error-text: #e8a49c;
+    color-scheme: dark;
+  }
 }
 
 * {
@@ -103,7 +134,7 @@ main {
 .preview-panel {
   min-height: 100%;
   border-left: 1px solid var(--line);
-  background: #fafaf9;
+  background: var(--surface-soft);
 }
 
 h2 {
@@ -163,7 +194,7 @@ textarea,
 select,
 .template-fields input:not([type="checkbox"]) {
   width: 100%;
-  border: 1px solid #c9cdca;
+  border: 1px solid var(--control-border);
   border-radius: 8px;
   background: var(--surface);
   color: var(--ink);
@@ -210,7 +241,7 @@ textarea::placeholder {
 }
 
 button {
-  border: 1px solid #c9cdca;
+  border: 1px solid var(--control-border);
   background: var(--surface);
   color: var(--ink);
 }
@@ -225,7 +256,7 @@ button {
 
 .sample-button:hover,
 .text-button:hover {
-  background: #f2f3f2;
+  background: var(--hover-bg);
 }
 
 .date-field {
@@ -254,7 +285,7 @@ select,
 }
 
 .download-button:hover {
-  background: var(--accent-dark);
+  background: var(--accent-hover);
 }
 
 .error-message {
@@ -262,10 +293,10 @@ select,
   padding: 12px 14px;
   display: flex;
   gap: 10px;
-  border: 1px solid #e4b6b0;
+  border: 1px solid var(--error-border);
   border-radius: 8px;
-  background: #fdf3f2;
-  color: #8c322a;
+  background: var(--error-bg);
+  color: var(--error-text);
   font-size: 14px;
 }
 
@@ -350,8 +381,8 @@ select,
 .type-label {
   padding: 1px 7px;
   border-radius: 5px;
-  background: #eaf2ec;
-  color: var(--accent-dark);
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
   font-size: 11px;
   font-weight: 600;
 }
