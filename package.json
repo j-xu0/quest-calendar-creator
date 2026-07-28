@@ -10,9 +10,12 @@
     "lint": "oxlint .",
     "fmt": "oxfmt .",
     "fmt:check": "oxfmt --check .",
-    "test": "bun test"
+    "test": "bun test",
+    "deploy": "bun run build && wrangler deploy",
+    "preview": "bun run build && wrangler dev"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.47.0",
     "@sveltejs/vite-plugin-svelte": "latest",
     "@tsconfig/svelte": "latest",
     "@types/bun": "latest",
@@ -22,6 +25,7 @@
     "svelte": "latest",
     "svelte-check": "latest",
     "typescript": "^5.9.3",
-    "vite": "latest"
+    "vite": "latest",
+    "wrangler": "^4.114.0"
   }
 }
